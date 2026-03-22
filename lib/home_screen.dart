@@ -3,6 +3,7 @@ import 'add_glucose_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 import 'medical_records_screen.dart';
+import 'customer_support.dart';
 
 class GlucoLogHomeScreen extends StatelessWidget {
   GlucoLogHomeScreen({super.key});
@@ -241,6 +242,7 @@ class GlucoLogHomeScreen extends StatelessWidget {
           color: Color(0xFF46C85B),
         ),
         _MedicalRecordsNavCard(),
+        _CustomerSupportNavCard(),
       ],
     );
   }
@@ -362,17 +364,20 @@ class _GlucoseNavCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AddGlucoseScreen()),
-        );
-      },
-      child: const _MiniStatCard(
-        title: "Log Glucose Level",
-        value: "115",
-        unit: "mg/dL",
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddGlucoseScreen()),
+          );
+        },
+        child: const _MiniStatCard(
+          title: "Log Glucose Level",
+          value: "115",
+          unit: "mg/dL",
+        ),
       ),
     );
   }
@@ -383,17 +388,20 @@ class _HistoryNavCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => HistoryScreen()),
-        );
-      },
-      child: const _ShortcutCard(
-        title: "Timeline/\nHistory",
-        icon: Icons.timeline,
-        color: Color(0xFF8EEA66),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HistoryScreen()),
+          );
+        },
+        child: const _ShortcutCard(
+          title: "Timeline/\nHistory",
+          icon: Icons.timeline,
+          color: Color(0xFF8EEA66),
+        ),
       ),
     );
   }
@@ -404,17 +412,44 @@ class _MedicalRecordsNavCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MedicalRecordsScreen()),
-        );
-      },
-      child: const _ShortcutCard(
-        title: "Medical\nRecords",
-        icon: Icons.folder_open,
-        color: Color(0xFFF2E95A),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MedicalRecordsScreen()),
+          );
+        },
+        child: const _ShortcutCard(
+          title: "Medical\nRecords",
+          icon: Icons.folder_open,
+          color: Color(0xFFF2E95A),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomerSupportNavCard extends StatelessWidget {
+  const _CustomerSupportNavCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CustomerSupportScreen()),
+          );
+        },
+        child: const _ShortcutCard(
+          title: "Customer\nSupport",
+          icon: Icons.support_agent,
+          color: Color(0xFF76C44F),
+        ),
       ),
     );
   }

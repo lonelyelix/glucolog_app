@@ -39,7 +39,9 @@ class MedicalRecordsScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: darkGreen,
         foregroundColor: Colors.white,
-        onPressed: () {},
+        onPressed: () {
+          // TODO: upload later
+        },
         icon: const Icon(Icons.upload_file),
         label: const Text('Upload Record'),
       ),
@@ -51,13 +53,6 @@ class MedicalRecordsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: cardColor,
               borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: const Text(
               'Store and review important medical files such as blood test results, specialist notes, and treatment summaries.',
@@ -73,13 +68,6 @@ class MedicalRecordsScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: cardColor,
                 borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
               ),
               child: Row(
                 children: [
@@ -101,31 +89,14 @@ class MedicalRecordsScreen extends StatelessWidget {
                             color: textDark,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Date: ${record['date']}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Type: $type',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
-                          ),
-                        ),
+                        Text('Date: ${record['date']}'),
+                        Text('Type: $type'),
                       ],
                     ),
                   ),
                   IconButton(
                     onPressed: () {},
-                    icon: const Icon(
-                      Icons.visibility_outlined,
-                      color: darkGreen,
-                    ),
+                    icon: const Icon(Icons.visibility_outlined),
                   ),
                 ],
               ),
