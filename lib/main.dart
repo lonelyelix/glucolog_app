@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'app_theme.dart';
 import 'login_screen.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  
   runApp(const GlucoLogApp());
 }
 
@@ -16,7 +15,7 @@ class GlucoLogApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'GlucoLog',
-      theme: ThemeData(useMaterial3: true),
+      theme: AppTheme.theme,
       home: const LoginScreen(),
     );
   }

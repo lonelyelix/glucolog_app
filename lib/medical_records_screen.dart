@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
+import 'app_shell.dart';
 
 class MedicalRecordsScreen extends StatelessWidget {
   MedicalRecordsScreen({super.key});
@@ -18,22 +19,10 @@ class MedicalRecordsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.lightGreen,
-      appBar: AppBar(
-        title: const Text(
-          'Medical Records',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppTheme.darkGreen,
-        foregroundColor: Colors.white,
-        onPressed: () {},
-        icon: const Icon(Icons.upload_file),
-        label: const Text('Upload Record'),
-      ),
-      body: ListView(
+    return AppShell(
+      title: 'Medical Records',
+      currentIndex: 0,
+      child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           ...records.map((record) {
@@ -72,10 +61,6 @@ class MedicalRecordsScreen extends StatelessWidget {
                         Text('Type: ${record['type']}'),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.visibility_outlined),
                   ),
                 ],
               ),

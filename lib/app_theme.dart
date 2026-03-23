@@ -55,12 +55,5 @@ class AppTheme {
         ),
       ),
     ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: cream,
-      selectedItemColor: darkGreen,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      elevation: 8,
-    ),
   );
 }
