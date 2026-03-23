@@ -1,22 +1,14 @@
 import 'package:flutter/material.dart';
+import 'app_theme.dart';
 
 class MedicalRecordsScreen extends StatelessWidget {
   MedicalRecordsScreen({super.key});
 
   final List<Map<String, String>> records = [
     {'title': 'Blood Test Report', 'date': '15 Mar 2026', 'type': 'PDF'},
-    {
-      'title': 'Diabetes Specialist Notes',
-      'date': '02 Mar 2026',
-      'type': 'DOC',
-    },
+    {'title': 'Diabetes Specialist Notes', 'date': '02 Mar 2026', 'type': 'DOC'},
     {'title': 'Glucose Lab Summary', 'date': '21 Feb 2026', 'type': 'PDF'},
   ];
-
-  static const Color bgColor = Color(0xFFB9D45B);
-  static const Color cardColor = Color(0xFFF3EEDB);
-  static const Color darkGreen = Color(0xFF1F5A2E);
-  static const Color textDark = Color(0xFF2E2E2E);
 
   IconData getFileIcon(String type) {
     if (type == 'PDF') return Icons.picture_as_pdf;
@@ -27,46 +19,29 @@ class MedicalRecordsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppTheme.lightGreen,
       appBar: AppBar(
-        backgroundColor: bgColor,
-        elevation: 0,
         title: const Text(
           'Medical Records',
-          style: TextStyle(color: textDark, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: darkGreen,
+        backgroundColor: AppTheme.darkGreen,
         foregroundColor: Colors.white,
-        onPressed: () {
-          // TODO: upload later
-        },
+        onPressed: () {},
         icon: const Icon(Icons.upload_file),
         label: const Text('Upload Record'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Text(
-              'Store and review important medical files such as blood test results, specialist notes, and treatment summaries.',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-          ),
-          const SizedBox(height: 16),
           ...records.map((record) {
-            final type = record['type'] ?? '';
             return Container(
               margin: const EdgeInsets.only(bottom: 14),
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: cardColor,
+                color: AppTheme.cream,
                 borderRadius: BorderRadius.circular(22),
               ),
               child: Row(
@@ -74,7 +49,10 @@ class MedicalRecordsScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: Colors.white,
-                    child: Icon(getFileIcon(type), color: darkGreen),
+                    child: Icon(
+                      getFileIcon(record['type'] ?? ''),
+                      color: AppTheme.darkGreen,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -86,11 +64,12 @@ class MedicalRecordsScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: textDark,
+                            color: AppTheme.textDark,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text('Date: ${record['date']}'),
-                        Text('Type: $type'),
+                        Text('Type: ${record['type']}'),
                       ],
                     ),
                   ),
