@@ -3,6 +3,7 @@ import 'app_shell.dart';
 import 'app_theme.dart';
 import 'models/glucose_entry.dart';
 import 'services/glucose_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoggingScreen extends StatefulWidget {
   const LoggingScreen({super.key});
@@ -113,21 +114,23 @@ class _LoggingScreenState extends State<LoggingScreen> {
                               borderRadius: BorderRadius.circular(24),
                             ),
                           ),
-                          onPressed: () {
-                            final glucose =
-                                double.tryParse(glucoseController.text);
-                            final insulin =
-                                double.tryParse(insulinController.text);
-                            final foodIntake =
-                                double.tryParse(foodController.text);
+                          onPressed: () async {
+                            final glucose = double.tryParse(
+                              glucoseController.text,
+                            );
+                            final insulin = double.tryParse(
+                              insulinController.text,
+                            );
+                            final foodIntake = double.tryParse(
+                              foodController.text,
+                            );
 
                             if (glucose == null ||
                                 insulin == null ||
                                 foodIntake == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content:
-                                      Text('Please enter valid numbers'),
+                                  content: Text('Please enter valid numbers'),
                                 ),
                               );
                               return;
@@ -139,6 +142,14 @@ class _LoggingScreenState extends State<LoggingScreen> {
                               foodIntake: foodIntake,
                               time: DateTime.now(),
                             );
+                            await FirebaseFirestore.instance
+                                .collection("entries")
+                                .add({
+                                  'glucose': entry.glucose,
+                                  'insuli': entry.insulin,
+                                  'foodIntake': entry.foodIntake,
+                                  'time': entry.time.toString(),
+                                });
 
                             GlucoseService.addEntry(entry);
                             Navigator.pop(context);

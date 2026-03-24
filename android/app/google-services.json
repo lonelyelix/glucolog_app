@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "376573125112",
+    "project_id": "glucolog-a2b42",
+    "storage_bucket": "glucolog-a2b42.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376573125112:android:daceb319d58b7e035ef60d",
+        "android_client_info": {
+          "package_name": "com.example.glucolog_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtnYXt0Vz_J0pktacHNqTNmOKA6-lvF_I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
