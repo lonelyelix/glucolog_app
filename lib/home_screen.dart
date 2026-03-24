@@ -7,7 +7,7 @@ import 'app_theme.dart';
 import 'app_shell.dart';
 
 class GlucoLogHomeScreen extends StatelessWidget {
-  GlucoLogHomeScreen({super.key});
+  const GlucoLogHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

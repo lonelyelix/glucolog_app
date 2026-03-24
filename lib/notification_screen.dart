@@ -3,7 +3,7 @@ import 'app_shell.dart';
 import 'app_theme.dart';
 
 class NotificationScreen extends StatelessWidget {
-  NotificationScreen({super.key});
+  const NotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
