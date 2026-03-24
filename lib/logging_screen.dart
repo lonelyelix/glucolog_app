@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'app_shell.dart';
 import 'app_theme.dart';
+import 'models/glucose_entry.dart';
+import 'services/glucose_service.dart';
 
 class LoggingScreen extends StatefulWidget {
   const LoggingScreen({super.key});
@@ -24,6 +26,8 @@ class _LoggingScreenState extends State<LoggingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final entries = GlucoseService.getEntries();
+
     return AppShell(
       title: 'GlucoLog',
       currentIndex: 0,
@@ -78,10 +82,10 @@ class _LoggingScreenState extends State<LoggingScreen> {
                       ),
                     ),
                     const SizedBox(height: 26),
-                    _buildLabel('Blood Glucose Level (mg/dl)'),
+                    _buildLabel('Blood Glucose Level (mg/dL)'),
                     _buildInput(glucoseController),
                     const SizedBox(height: 16),
-                    _buildLabel('Insulin Level (uu/mL)'),
+                    _buildLabel('Insulin Level (u/mL)'),
                     _buildInput(insulinController),
                     const SizedBox(height: 16),
                     _buildLabel('Food intake'),
@@ -109,7 +113,36 @@ class _LoggingScreenState extends State<LoggingScreen> {
                               borderRadius: BorderRadius.circular(24),
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            final glucose =
+                                double.tryParse(glucoseController.text);
+                            final insulin =
+                                double.tryParse(insulinController.text);
+                            final foodIntake =
+                                double.tryParse(foodController.text);
+
+                            if (glucose == null ||
+                                insulin == null ||
+                                foodIntake == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Please enter valid numbers'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final entry = GlucoseEntry(
+                              glucose: glucose,
+                              insulin: insulin,
+                              foodIntake: foodIntake,
+                              time: DateTime.now(),
+                            );
+
+                            GlucoseService.addEntry(entry);
+                            Navigator.pop(context);
+                          },
                           child: const Text(
                             'Log entry',
                             style: TextStyle(
@@ -143,8 +176,8 @@ class _LoggingScreenState extends State<LoggingScreen> {
                   padding: const EdgeInsets.fromLTRB(26, 24, 26, 28),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'Recent History',
                         style: TextStyle(
                           fontSize: 24,
@@ -152,18 +185,32 @@ class _LoggingScreenState extends State<LoggingScreen> {
                           color: Colors.black,
                         ),
                       ),
-                      SizedBox(height: 22),
-                      _HistoryLine(),
-                      SizedBox(height: 14),
-                      _HistoryLine(),
-                      SizedBox(height: 14),
-                      _HistoryLine(),
-                      SizedBox(height: 14),
-                      _HistoryLine(),
-                      SizedBox(height: 14),
-                      _HistoryLine(),
-                      SizedBox(height: 14),
-                      _HistoryLine(),
+                      const SizedBox(height: 22),
+                      if (entries.isEmpty)
+                        const Text(
+                          'No history yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black54,
+                          ),
+                        )
+                      else
+                        for (final entry in entries.reversed) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: Text(
+                              "Last logged : ${entry.glucose} mg/dL\n"
+                              '${entry.time.year}-${entry.time.month}-${entry.time.day} '
+                              '${entry.time.hour}:${entry.time.minute.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
                     ],
                   ),
                 ),
@@ -238,22 +285,6 @@ class _LoggingScreenState extends State<LoggingScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _HistoryLine extends StatelessWidget {
-  const _HistoryLine();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'Last logged : 23/10/2025 4:38 PM',
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: Colors.black,
       ),
     );
   }
