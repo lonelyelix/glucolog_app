@@ -16,7 +16,7 @@ class HistoryScreen extends StatelessWidget {
       title: 'Timeline / History',
       currentIndex: 1,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

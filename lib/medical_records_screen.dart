@@ -23,7 +23,7 @@ class MedicalRecordsScreen extends StatelessWidget {
       title: 'Medical Records',
       currentIndex: 0,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
         children: [
           ...records.map((record) {
             return Container(

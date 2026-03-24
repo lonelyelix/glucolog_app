@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'add_glucose_screen.dart';
 import 'history_screen.dart';
 import 'medical_records_screen.dart';
 import 'customer_support.dart';
+import 'logging_screen.dart';
 import 'app_theme.dart';
 import 'app_shell.dart';
 
@@ -15,7 +15,7 @@ class GlucoLogHomeScreen extends StatelessWidget {
       title: 'GlucoLog',
       currentIndex: 0,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 110),
         child: Column(
           children: [
             _buildHeader(),
@@ -26,7 +26,7 @@ class GlucoLogHomeScreen extends StatelessWidget {
             const SizedBox(height: 14),
             _buildChartCard(),
             const SizedBox(height: 16),
-            _buildLoggingBanner(),
+            _buildLoggingBanner(context),
             const SizedBox(height: 16),
             _buildShortcutLayout(context),
             const SizedBox(height: 16),
@@ -143,17 +143,9 @@ class GlucoLogHomeScreen extends StatelessWidget {
       mainAxisSpacing: 12,
       childAspectRatio: 1.38,
       children: const [
-        _MiniStatCard(
-          title: "Log Food Intake",
-          value: "1800",
-          unit: "Cal/day",
-        ),
+        _FoodNavCard(),
         _GlucoseNavCard(),
-        _MiniStatCard(
-          title: "Log Insulin Level",
-          value: "8",
-          unit: "u/mL",
-        ),
+        _InsulinNavCard(),
         _MiniStatCard(
           title: "Current Glucose Level",
           value: "In-range",
@@ -199,64 +191,72 @@ class GlucoLogHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoggingBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.18),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Logging /\nTracking",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    height: 1.05,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  "Last logged : 23/10/2025 4:38 PM",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+  Widget _buildLoggingBanner(BuildContext context) {
+    return _HoverScaleCard(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoggingScreen()),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-          ),
-          const SizedBox(width: 14),
-          SizedBox(
-            width: 54,
-            height: 54,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                _Bar(height: 18),
-                _Bar(height: 28),
-                _Bar(height: 38),
-                _Bar(height: 48),
-              ],
+          ],
+        ),
+        child: Row(
+          children: [
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Logging /\nTracking",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      height: 1.05,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Last logged : 23/10/2025 4:38 PM",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 14),
+            SizedBox(
+              width: 54,
+              height: 54,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  _Bar(height: 18),
+                  _Bar(height: 28),
+                  _Bar(height: 38),
+                  _Bar(height: 48),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -564,13 +564,55 @@ class _GlucoseNavCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AddGlucoseScreen()),
+          MaterialPageRoute(builder: (context) => const LoggingScreen()),
         );
       },
       child: const _MiniStatCard(
         title: "Log Glucose Level",
         value: "115",
         unit: "mg/dL",
+      ),
+    );
+  }
+}
+
+class _InsulinNavCard extends StatelessWidget {
+  const _InsulinNavCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _HoverScaleCard(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoggingScreen()),
+        );
+      },
+      child: const _MiniStatCard(
+        title: "Log Insulin Level",
+        value: "8",
+        unit: "u/mL",
+      ),
+    );
+  }
+}
+
+class _FoodNavCard extends StatelessWidget {
+  const _FoodNavCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _HoverScaleCard(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoggingScreen()),
+        );
+      },
+      child: const _MiniStatCard(
+        title: "Log Food Intake",
+        value: "1800",
+        unit: "Cal/day",
       ),
     );
   }

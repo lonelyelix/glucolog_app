@@ -11,7 +11,7 @@ class ProfileScreen extends StatelessWidget {
       title: 'Profile',
       currentIndex: 3,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
         child: Column(
           children: [
             Container(
@@ -29,7 +29,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 12),
                   Text(
-                    'Hero123',
+                    'CSIT321',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -37,7 +37,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 4),
-                  Text('hero123@gmail.com'),
+                  Text('CSIT321isfun@gmail.com'),
                 ],
               ),
             ),

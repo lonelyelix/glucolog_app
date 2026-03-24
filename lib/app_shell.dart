@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
-import 'customer_support.dart';
+import 'notification_screen.dart';
 import 'app_theme.dart';
 
 class AppShell extends StatelessWidget {
@@ -29,10 +29,10 @@ class AppShell extends StatelessWidget {
         page = HistoryScreen();
         break;
       case 2:
-        page = const CustomerSupportScreen();
+        page = NotificationScreen();
         break;
       case 3:
-        page = const ProfileScreen();
+        page = ProfileScreen();
         break;
       default:
         page = GlucoLogHomeScreen();
@@ -90,7 +90,7 @@ class AppShell extends StatelessWidget {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.notifications_none),
-              label: "Support",
+              label: "Notification",
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
@@ -99,12 +99,7 @@ class AppShell extends StatelessWidget {
           ],
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 100),
-          child: child,
-        ),
-      ),
+      body: SafeArea(child: child),
     );
   }
 }
