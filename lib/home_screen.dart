@@ -299,7 +299,11 @@ class GlucoLogHomeScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Icon(Icons.list_alt_rounded, color: Colors.blue, size: 28),
+                        Icon(
+                          Icons.list_alt_rounded,
+                          color: Colors.blue,
+                          size: 28,
+                        ),
                       ],
                     ),
                     const Spacer(),
@@ -429,9 +433,7 @@ class GlucoLogHomeScreen extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => MedicalRecordsScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => MedicalRecordsScreen()),
         );
       },
       child: Container(
@@ -541,10 +543,7 @@ class _MiniStatCard extends StatelessWidget {
                 ),
                 TextSpan(
                   text: unit.isNotEmpty ? " $unit" : "",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.black54),
                 ),
               ],
             ),
@@ -622,10 +621,7 @@ class _HoverScaleCard extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
 
-  const _HoverScaleCard({
-    required this.child,
-    required this.onTap,
-  });
+  const _HoverScaleCard({required this.child, required this.onTap});
 
   @override
   State<_HoverScaleCard> createState() => _HoverScaleCardState();
@@ -640,8 +636,8 @@ class _HoverScaleCardState extends State<_HoverScaleCard> {
     final scale = _pressing
         ? 0.98
         : _hovering
-            ? 1.02
-            : 1.0;
+        ? 1.02
+        : 1.0;
 
     final translateY = _hovering ? -3.0 : 0.0;
 
@@ -727,10 +723,38 @@ class _ChartPainter extends CustomPainter {
 
     final path = Path();
     path.moveTo(25, size.height * 0.78);
-    path.cubicTo(70, size.height * 0.80, 95, size.height * 0.74, 130, size.height * 0.60);
-    path.cubicTo(160, size.height * 0.48, 190, size.height * 0.38, 225, size.height * 0.42);
-    path.cubicTo(250, size.height * 0.44, 270, size.height * 0.28, 300, size.height * 0.30);
-    path.cubicTo(320, size.height * 0.32, 340, size.height * 0.48, size.width - 26, size.height * 0.22);
+    path.cubicTo(
+      70,
+      size.height * 0.80,
+      95,
+      size.height * 0.74,
+      130,
+      size.height * 0.60,
+    );
+    path.cubicTo(
+      160,
+      size.height * 0.48,
+      190,
+      size.height * 0.38,
+      225,
+      size.height * 0.42,
+    );
+    path.cubicTo(
+      250,
+      size.height * 0.44,
+      270,
+      size.height * 0.28,
+      300,
+      size.height * 0.30,
+    );
+    path.cubicTo(
+      320,
+      size.height * 0.32,
+      340,
+      size.height * 0.48,
+      size.width - 26,
+      size.height * 0.22,
+    );
 
     canvas.drawPath(path, linePaint);
 

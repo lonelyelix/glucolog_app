@@ -1,9 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import 'app_shell.dart';
 import 'app_theme.dart';
 import 'models/glucose_entry.dart';
-import 'services/glucose_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoggingScreen extends StatefulWidget {
   const LoggingScreen({super.key});
@@ -27,8 +27,6 @@ class _LoggingScreenState extends State<LoggingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final entries = GlucoseService.getEntries();
-
     return AppShell(
       title: 'GlucoLog',
       currentIndex: 0,
@@ -115,13 +113,13 @@ class _LoggingScreenState extends State<LoggingScreen> {
                             ),
                           ),
                           onPressed: () async {
-                            final glucose = double.tryParse(
+                            final double? glucose = double.tryParse(
                               glucoseController.text,
                             );
-                            final insulin = double.tryParse(
+                            final double? insulin = double.tryParse(
                               insulinController.text,
                             );
-                            final foodIntake = double.tryParse(
+                            final double? foodIntake = double.tryParse(
                               foodController.text,
                             );
 
@@ -142,17 +140,29 @@ class _LoggingScreenState extends State<LoggingScreen> {
                               foodIntake: foodIntake,
                               time: DateTime.now(),
                             );
-                            await FirebaseFirestore.instance
-                                .collection("entries")
+
+                            final docRef = await FirebaseFirestore.instance
+                                .collection('entries')
                                 .add({
                                   'glucose': entry.glucose,
-                                  'insuli': entry.insulin,
+                                  'insulin': entry.insulin,
                                   'foodIntake': entry.foodIntake,
-                                  'time': entry.time.toString(),
+                                  'time': Timestamp.now(),
                                 });
+                            print('saved doc id = ${docRef.id}');
+                            print('saved glucose = ${entry.glucose}');
 
-                            GlucoseService.addEntry(entry);
-                            Navigator.pop(context);
+                            if (!context.mounted) return;
+                            glucoseController.clear();
+                            insulinController.clear();
+                            foodController.clear();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Saved to Firebase'),
+                              ),
+                            );
+
+                            //Navigator.pop(context);
                           },
                           child: const Text(
                             'Log entry',
@@ -197,31 +207,108 @@ class _LoggingScreenState extends State<LoggingScreen> {
                         ),
                       ),
                       const SizedBox(height: 22),
-                      if (entries.isEmpty)
-                        const Text(
-                          'No history yet',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black54,
-                          ),
-                        )
-                      else
-                        for (final entry in entries.reversed) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: Text(
-                              "Last logged : ${entry.glucose} mg/dL\n"
-                              '${entry.time.year}-${entry.time.month}-${entry.time.day} '
-                              '${entry.time.hour}:${entry.time.minute.toString().padLeft(2, '0')}',
-                              style: const TextStyle(
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('entries')
+                            .orderBy('time', descending: true)
+                            .limit(5)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          debugPrint(
+                            'docs count: ${snapshot.data?.docs.length}',
+                          );
+                          if (snapshot.hasData &&
+                              snapshot.data!.docs.isNotEmpty) {
+                            final first =
+                                snapshot.data!.docs.first.data()
+                                    as Map<String, dynamic>;
+                            print(
+                              'top history item = ${first['glucose']} / ${first['time']}',
+                            );
+                          }
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Text(
+                              'Loading...',
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.black,
+                                color: Colors.black54,
                               ),
-                            ),
-                          ),
-                        ],
+                            );
+                          }
+
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return const Text(
+                              'No history yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black54,
+                              ),
+                            );
+                          }
+
+                          final docs = snapshot.data!.docs;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: docs.asMap().entries.map((entry) {
+                              final int index = entry.key;
+                              final QueryDocumentSnapshot doc = entry.value;
+                              final data = doc.data() as Map<String, dynamic>;
+                              final rawTime = data['time'];
+
+                              DateTime? time;
+                              if (rawTime is Timestamp) {
+                                time = rawTime.toDate();
+                              } else if (rawTime is String) {
+                                time = DateTime.tryParse(rawTime);
+                              }
+
+                              String label;
+                              if (index == 0) {
+                                label = 'Last logged';
+                              } else if (index == 1) {
+                                label = 'Before';
+                              } else {
+                                label = '';
+                              }
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (label.isNotEmpty)
+                                      Text(
+                                        label,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    Text(
+                                      time == null
+                                          ? '${data['glucose']} mg/dL\nNo time'
+                                          : '${data['glucose']} mg/dL\n'
+                                                '${time.year}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')} '
+                                                '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
