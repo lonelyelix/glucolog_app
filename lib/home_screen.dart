@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import 'history_screen.dart';
 import 'medical_records_screen.dart';
 import 'customer_support.dart';
@@ -6,34 +8,140 @@ import 'logging_screen.dart';
 import 'app_theme.dart';
 import 'app_shell.dart';
 
-class GlucoLogHomeScreen extends StatelessWidget {
+class GlucoLogHomeScreen extends StatefulWidget {
   const GlucoLogHomeScreen({super.key});
 
   @override
+  State<GlucoLogHomeScreen> createState() => _GlucoLogHomeScreenState();
+}
+
+class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
+  String formatDateTime(DateTime time) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+
+    final day = twoDigits(time.day);
+    final month = twoDigits(time.month);
+    final year = time.year;
+
+    int hour = time.hour;
+    final minute = twoDigits(time.minute);
+    final period = hour >= 12 ? 'PM' : 'AM';
+
+    hour = hour % 12;
+    if (hour == 0) hour = 12;
+
+    return '$day/$month/$year  $hour:$minute $period';
+  }
+
+  String getGlucoseStatus(double glucose) {
+    if (glucose < 70) {
+      return 'Low';
+    } else if (glucose <= 140) {
+      return 'Within target range';
+    } else {
+      return 'High';
+    }
+  }
+
+  Color getGlucoseStatusColor(double glucose) {
+    if (glucose < 70) {
+      return Colors.orange;
+    } else if (glucose <= 140) {
+      return Colors.green;
+    } else {
+      return Colors.red;
+    }
+  }
+
+  DateTime? _parseTime(dynamic rawTime) {
+    if (rawTime is Timestamp) {
+      return rawTime.toDate();
+    } else if (rawTime is String) {
+      return DateTime.tryParse(rawTime);
+    }
+    return null;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return AppShell(
-      title: 'GlucoLog',
-      currentIndex: 0,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 110),
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 16),
-            _buildCurrentGlucoseCard(),
-            const SizedBox(height: 14),
-            _buildStatsGrid(),
-            const SizedBox(height: 14),
-            _buildChartCard(),
-            const SizedBox(height: 16),
-            _buildLoggingBanner(context),
-            const SizedBox(height: 16),
-            _buildShortcutLayout(context),
-            const SizedBox(height: 16),
-            _buildMedicalRecordsBanner(context),
-          ],
-        ),
-      ),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('entries')
+          .orderBy('time', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppShell(
+            title: 'GlucoLog',
+            currentIndex: 0,
+            child: const Center(
+              child: Text(
+                'Something went wrong while loading data',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return AppShell(
+            title: 'GlucoLog',
+            currentIndex: 0,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        final Map<String, dynamic>? latestData = docs.isNotEmpty
+            ? docs.first.data() as Map<String, dynamic>
+            : null;
+
+        final double? latestGlucose = latestData != null
+            ? (latestData['glucose'] as num?)?.toDouble()
+            : null;
+
+        final double? latestInsulin = latestData != null
+            ? (latestData['insulin'] as num?)?.toDouble()
+            : null;
+
+        final double? latestFood = latestData != null
+            ? (latestData['foodIntake'] as num?)?.toDouble()
+            : null;
+
+        final DateTime? latestTime = latestData != null
+            ? _parseTime(latestData['time'])
+            : null;
+
+        return AppShell(
+          title: 'GlucoLog',
+          currentIndex: 0,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 110),
+            child: Column(
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 16),
+                _buildCurrentGlucoseCard(latestGlucose),
+                const SizedBox(height: 14),
+                _buildStatsGrid(
+                  docs.length,
+                  latestGlucose,
+                  latestInsulin,
+                  latestFood,
+                ),
+                const SizedBox(height: 14),
+                _buildChartCard(),
+                const SizedBox(height: 16),
+                _buildLoggingBanner(context, latestTime),
+                const SizedBox(height: 16),
+                _buildShortcutLayout(context),
+                const SizedBox(height: 16),
+                _buildMedicalRecordsBanner(context),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -75,7 +183,16 @@ class GlucoLogHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCurrentGlucoseCard() {
+  Widget _buildCurrentGlucoseCard(double? latestGlucose) {
+    final bool hasData = latestGlucose != null;
+    final double glucoseValue = hasData ? latestGlucose : 0;
+    final String statusText = hasData
+        ? getGlucoseStatus(glucoseValue)
+        : 'No data yet';
+    final Color statusColor = hasData
+        ? getGlucoseStatusColor(glucoseValue)
+        : Colors.grey;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -92,8 +209,8 @@ class GlucoLogHomeScreen extends StatelessWidget {
         ],
       ),
       child: Column(
-        children: const [
-          Text(
+        children: [
+          const Text(
             "Current Glucose levels",
             style: TextStyle(
               fontSize: 16,
@@ -101,18 +218,18 @@ class GlucoLogHomeScreen extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            "115",
-            style: TextStyle(
+            hasData ? latestGlucose.toString() : '--',
+            style: const TextStyle(
               fontSize: 42,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
               height: 1,
             ),
           ),
-          SizedBox(height: 2),
-          Text(
+          const SizedBox(height: 2),
+          const Text(
             "mg/dL",
             style: TextStyle(
               fontSize: 16,
@@ -120,12 +237,12 @@ class GlucoLogHomeScreen extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Text(
-            "Within target range",
+            statusText,
             style: TextStyle(
               fontSize: 13,
-              color: Colors.green,
+              color: statusColor,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -134,7 +251,28 @@ class GlucoLogHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid(
+    int totalEntries,
+    double? latestGlucose,
+    double? latestInsulin,
+    double? latestFood,
+  ) {
+    final String latestGlucoseText = latestGlucose != null
+        ? latestGlucose.toString()
+        : '--';
+
+    final String latestInsulinText = latestInsulin != null
+        ? latestInsulin.toString()
+        : '--';
+
+    final String latestFoodText = latestFood != null
+        ? latestFood.toString()
+        : '--';
+
+    final String status = latestGlucose != null
+        ? getGlucoseStatus(latestGlucose)
+        : 'No data';
+
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -142,14 +280,14 @@ class GlucoLogHomeScreen extends StatelessWidget {
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 1.38,
-      children: const [
-        _FoodNavCard(),
-        _GlucoseNavCard(),
-        _InsulinNavCard(),
+      children: [
+        _FoodNavCard(value: latestFoodText),
+        _GlucoseNavCard(value: latestGlucoseText),
+        _InsulinNavCard(value: latestInsulinText),
         _MiniStatCard(
-          title: "Current Glucose Level",
-          value: "In-range",
-          unit: "",
+          title: "Saved Entries",
+          value: totalEntries.toString(),
+          unit: status,
         ),
       ],
     );
@@ -191,10 +329,14 @@ class GlucoLogHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoggingBanner(BuildContext context) {
+  Widget _buildLoggingBanner(BuildContext context, DateTime? latestTime) {
+    final String lastLoggedText = latestTime != null
+        ? formatDateTime(latestTime)
+        : 'No entries yet';
+
     return _HoverScaleCard(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const LoggingScreen()),
         );
@@ -215,11 +357,11 @@ class GlucoLogHomeScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     "Logging /\nTracking",
                     style: TextStyle(
                       color: Colors.white,
@@ -228,10 +370,10 @@ class GlucoLogHomeScreen extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    "Last logged : 23/10/2025 4:38 PM",
-                    style: TextStyle(
+                    "Last logged : $lastLoggedText",
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -270,10 +412,12 @@ class GlucoLogHomeScreen extends StatelessWidget {
           Expanded(
             flex: 11,
             child: _HoverScaleCard(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HistoryScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const HistoryScreen(),
+                  ),
                 );
               },
               child: Container(
@@ -555,7 +699,9 @@ class _MiniStatCard extends StatelessWidget {
 }
 
 class _GlucoseNavCard extends StatelessWidget {
-  const _GlucoseNavCard();
+  final String value;
+
+  const _GlucoseNavCard({required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -566,9 +712,9 @@ class _GlucoseNavCard extends StatelessWidget {
           MaterialPageRoute(builder: (context) => const LoggingScreen()),
         );
       },
-      child: const _MiniStatCard(
+      child: _MiniStatCard(
         title: "Log Glucose Level",
-        value: "115",
+        value: value,
         unit: "mg/dL",
       ),
     );
@@ -576,7 +722,9 @@ class _GlucoseNavCard extends StatelessWidget {
 }
 
 class _InsulinNavCard extends StatelessWidget {
-  const _InsulinNavCard();
+  final String value;
+
+  const _InsulinNavCard({required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -587,9 +735,9 @@ class _InsulinNavCard extends StatelessWidget {
           MaterialPageRoute(builder: (context) => const LoggingScreen()),
         );
       },
-      child: const _MiniStatCard(
+      child: _MiniStatCard(
         title: "Log Insulin Level",
-        value: "8",
+        value: value,
         unit: "u/mL",
       ),
     );
@@ -597,7 +745,9 @@ class _InsulinNavCard extends StatelessWidget {
 }
 
 class _FoodNavCard extends StatelessWidget {
-  const _FoodNavCard();
+  final String value;
+
+  const _FoodNavCard({required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -608,11 +758,7 @@ class _FoodNavCard extends StatelessWidget {
           MaterialPageRoute(builder: (context) => const LoggingScreen()),
         );
       },
-      child: const _MiniStatCard(
-        title: "Log Food Intake",
-        value: "1800",
-        unit: "Cal/day",
-      ),
+      child: _MiniStatCard(title: "Log Food Intake", value: value, unit: ""),
     );
   }
 }

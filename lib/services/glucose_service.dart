@@ -1,13 +1,17 @@
 import '../models/glucose_entry.dart';
 
 class GlucoseService {
-  static List<GlucoseEntry> entries = [];
+  static final List<GlucoseEntry> _entries = [];
 
   static void addEntry(GlucoseEntry entry) {
-    entries.add(entry);
+    _entries.add(entry);
   }
 
   static List<GlucoseEntry> getEntries() {
-    return entries;
+    return _entries;
+  }
+
+  static void deleteEntry(GlucoseEntry entry) {
+    _entries.remove(entry);
   }
 }
