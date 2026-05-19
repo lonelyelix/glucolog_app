@@ -5,8 +5,11 @@ import 'history_screen.dart';
 import 'medical_records_screen.dart';
 import 'customer_support.dart';
 import 'logging_screen.dart';
+import 'graph_chart_screen.dart';
 import 'app_theme.dart';
 import 'app_shell.dart';
+
+enum ChartRange { daily, weekly, monthly }
 
 class GlucoLogHomeScreen extends StatefulWidget {
   const GlucoLogHomeScreen({super.key});
@@ -16,6 +19,8 @@ class GlucoLogHomeScreen extends StatefulWidget {
 }
 
 class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
+  ChartRange _selectedChartRange = ChartRange.weekly;
+
   String formatDateTime(DateTime time) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
 
@@ -74,10 +79,14 @@ class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
           return AppShell(
             title: 'GlucoLog',
             currentIndex: 0,
-            child: const Center(
+            child: Center(
               child: Text(
-                'Something went wrong while loading data',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                'Error: ${snapshot.error}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           );
@@ -92,6 +101,7 @@ class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
         }
 
         final docs = snapshot.data?.docs ?? [];
+
         final Map<String, dynamic>? latestData = docs.isNotEmpty
             ? docs.first.data() as Map<String, dynamic>
             : null;
@@ -130,7 +140,7 @@ class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
                   latestFood,
                 ),
                 const SizedBox(height: 14),
-                _buildChartCard(),
+                _buildChartCard(docs),
                 const SizedBox(height: 16),
                 _buildLoggingBanner(context, latestTime),
                 const SizedBox(height: 16),
@@ -293,10 +303,42 @@ class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
     );
   }
 
-  Widget _buildChartCard() {
+  Widget _buildChartCard(List<QueryDocumentSnapshot> docs) {
+    final now = DateTime.now();
+
+    DateTime startDate;
+    String title;
+
+    if (_selectedChartRange == ChartRange.daily) {
+      startDate = DateTime(now.year, now.month, now.day);
+      title = 'Daily Trend';
+    } else if (_selectedChartRange == ChartRange.weekly) {
+      startDate = now.subtract(const Duration(days: 7));
+      title = 'Weekly Trend';
+    } else {
+      startDate = now.subtract(const Duration(days: 30));
+      title = 'Monthly Trend';
+    }
+
+    final chartPoints =
+        docs
+            .map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final glucose = (data['glucose'] as num?)?.toDouble();
+              final time = _parseTime(data['time']);
+
+              if (glucose == null || time == null) return null;
+              if (time.isBefore(startDate)) return null;
+
+              return _GlucoseChartPoint(time: time, glucose: glucose);
+            })
+            .whereType<_GlucoseChartPoint>()
+            .toList()
+          ..sort((a, b) => a.time.compareTo(b.time));
+
     return Container(
       width: double.infinity,
-      height: 230,
+      height: 290,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFDDF3E5),
@@ -309,22 +351,70 @@ class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
           ),
         ],
       ),
-      child: CustomPaint(
-        painter: _ChartPainter(),
-        child: const Align(
-          alignment: Alignment.topCenter,
-          child: Padding(
-            padding: EdgeInsets.only(top: 6),
-            child: Text(
-              "Weekly Trend",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Colors.black54,
-              ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Colors.black54,
             ),
           ),
-        ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _ChartRangeButton(
+                label: 'Daily',
+                selected: _selectedChartRange == ChartRange.daily,
+                onTap: () {
+                  setState(() {
+                    _selectedChartRange = ChartRange.daily;
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              _ChartRangeButton(
+                label: 'Weekly',
+                selected: _selectedChartRange == ChartRange.weekly,
+                onTap: () {
+                  setState(() {
+                    _selectedChartRange = ChartRange.weekly;
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              _ChartRangeButton(
+                label: 'Monthly',
+                selected: _selectedChartRange == ChartRange.monthly,
+                onTap: () {
+                  setState(() {
+                    _selectedChartRange = ChartRange.monthly;
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: chartPoints.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No glucose data for this period',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                : CustomPaint(
+                    painter: _ChartPainter(points: chartPoints),
+                    child: Container(),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -476,7 +566,14 @@ class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
               children: [
                 Expanded(
                   child: _HoverScaleCard(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GraphChartScreen(),
+                        ),
+                      );
+                    },
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                       decoration: BoxDecoration(
@@ -577,7 +674,7 @@ class _GlucoLogHomeScreenState extends State<GlucoLogHomeScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MedicalRecordsScreen()),
+          MaterialPageRoute(builder: (context) => const MedicalRecordsScreen()),
         );
       },
       child: Container(
@@ -850,57 +947,167 @@ class _TimelineBar extends StatelessWidget {
   }
 }
 
+class _GlucoseChartPoint {
+  final DateTime time;
+  final double glucose;
+
+  const _GlucoseChartPoint({required this.time, required this.glucose});
+}
+
+class _ChartRangeButton extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ChartRangeButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.darkGreen : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.darkGreen.withOpacity(0.4)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppTheme.darkGreen,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ChartPainter extends CustomPainter {
+  final List<_GlucoseChartPoint> points;
+
+  const _ChartPainter({required this.points});
+
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
       ..color = const Color(0xFFE7A974).withOpacity(0.45)
       ..strokeWidth = 1.1;
 
+    final axisPaint = Paint()
+      ..color = Colors.black54
+      ..strokeWidth = 1.4;
+
     final linePaint = Paint()
       ..color = const Color(0xFF9AD94A)
       ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    for (int i = 1; i < 5; i++) {
-      final y = size.height * i / 5;
-      canvas.drawLine(Offset(16, y), Offset(size.width - 16, y), gridPaint);
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+
+    const leftPadding = 42.0;
+    const rightPadding = 18.0;
+    const topPadding = 14.0;
+    const bottomPadding = 34.0;
+
+    final chartWidth = size.width - leftPadding - rightPadding;
+    final chartHeight = size.height - topPadding - bottomPadding;
+
+    if (points.isEmpty) return;
+
+    final glucoseValues = points.map((p) => p.glucose).toList();
+
+    double minGlucose = glucoseValues.reduce((a, b) => a < b ? a : b);
+    double maxGlucose = glucoseValues.reduce((a, b) => a > b ? a : b);
+
+    minGlucose = (minGlucose - 20).clamp(0, double.infinity);
+    maxGlucose = maxGlucose + 20;
+
+    if (minGlucose == maxGlucose) {
+      minGlucose -= 20;
+      maxGlucose += 20;
     }
 
+    double xForIndex(int index) {
+      if (points.length == 1) {
+        return leftPadding + chartWidth / 2;
+      }
+      return leftPadding + chartWidth * index / (points.length - 1);
+    }
+
+    double yForGlucose(double glucose) {
+      final normalized = (glucose - minGlucose) / (maxGlucose - minGlucose);
+      return topPadding + chartHeight * (1 - normalized);
+    }
+
+    String shortDate(DateTime time) {
+      return '${time.day}/${time.month}';
+    }
+
+    String shortTime(DateTime time) {
+      final hour = time.hour.toString().padLeft(2, '0');
+      final minute = time.minute.toString().padLeft(2, '0');
+      return '$hour:$minute';
+    }
+
+    for (int i = 0; i <= 4; i++) {
+      final y = topPadding + chartHeight * i / 4;
+      final glucoseLabel = maxGlucose - ((maxGlucose - minGlucose) * i / 4);
+
+      canvas.drawLine(
+        Offset(leftPadding, y),
+        Offset(size.width - rightPadding, y),
+        gridPaint,
+      );
+
+      textPainter.text = TextSpan(
+        text: glucoseLabel.toStringAsFixed(0),
+        style: const TextStyle(
+          color: Colors.black54,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+      textPainter.layout();
+
+      textPainter.paint(
+        canvas,
+        Offset(leftPadding - textPainter.width - 6, y - 6),
+      );
+    }
+
+    canvas.drawLine(
+      Offset(leftPadding, topPadding),
+      Offset(leftPadding, topPadding + chartHeight),
+      axisPaint,
+    );
+
+    canvas.drawLine(
+      Offset(leftPadding, topPadding + chartHeight),
+      Offset(size.width - rightPadding, topPadding + chartHeight),
+      axisPaint,
+    );
+
     final path = Path();
-    path.moveTo(25, size.height * 0.78);
-    path.cubicTo(
-      70,
-      size.height * 0.80,
-      95,
-      size.height * 0.74,
-      130,
-      size.height * 0.60,
-    );
-    path.cubicTo(
-      160,
-      size.height * 0.48,
-      190,
-      size.height * 0.38,
-      225,
-      size.height * 0.42,
-    );
-    path.cubicTo(
-      250,
-      size.height * 0.44,
-      270,
-      size.height * 0.28,
-      300,
-      size.height * 0.30,
-    );
-    path.cubicTo(
-      320,
-      size.height * 0.32,
-      340,
-      size.height * 0.48,
-      size.width - 26,
-      size.height * 0.22,
-    );
+
+    for (int i = 0; i < points.length; i++) {
+      final x = xForIndex(i);
+      final y = yForGlucose(points[i].glucose);
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
 
     canvas.drawPath(path, linePaint);
 
@@ -910,11 +1117,97 @@ class _ChartPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
-    final point = Offset(size.width - 70, size.height * 0.30);
-    canvas.drawCircle(point, 5, pointPaint);
-    canvas.drawCircle(point, 5, pointBorder);
+    for (int i = 0; i < points.length; i++) {
+      final point = Offset(xForIndex(i), yForGlucose(points[i].glucose));
+
+      canvas.drawCircle(point, 4.5, pointPaint);
+      canvas.drawCircle(point, 4.5, pointBorder);
+    }
+
+    final labelIndexes = <int>{0};
+
+    if (points.length > 2) {
+      labelIndexes.add(points.length ~/ 2);
+    }
+
+    if (points.length > 1) {
+      labelIndexes.add(points.length - 1);
+    }
+
+    for (final index in labelIndexes) {
+      final point = points[index];
+      final x = xForIndex(index);
+
+      final label = points.length <= 3
+          ? shortTime(point.time)
+          : shortDate(point.time);
+
+      textPainter.text = TextSpan(
+        text: label,
+        style: const TextStyle(
+          color: Colors.black54,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+      textPainter.layout();
+
+      double labelX = x - textPainter.width / 2;
+
+      if (labelX < leftPadding) {
+        labelX = leftPadding;
+      }
+
+      if (labelX + textPainter.width > size.width - rightPadding) {
+        labelX = size.width - rightPadding - textPainter.width;
+      }
+
+      textPainter.paint(canvas, Offset(labelX, topPadding + chartHeight + 8));
+    }
+
+    final latest = points.last;
+    final latestPoint = Offset(
+      xForIndex(points.length - 1),
+      yForGlucose(latest.glucose),
+    );
+
+    textPainter.text = TextSpan(
+      text: '${latest.glucose.toStringAsFixed(0)} mg/dL',
+      style: const TextStyle(
+        color: Colors.black54,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+      ),
+    );
+    textPainter.layout();
+
+    double textX = latestPoint.dx - textPainter.width / 2;
+
+    if (textX < leftPadding) {
+      textX = leftPadding;
+    }
+
+    if (textX + textPainter.width > size.width - rightPadding) {
+      textX = size.width - rightPadding - textPainter.width;
+    }
+
+    textPainter.paint(canvas, Offset(textX, latestPoint.dy - 24));
+
+    textPainter.text = const TextSpan(
+      text: 'mg/dL',
+      style: TextStyle(
+        color: Colors.black45,
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+    textPainter.layout();
+
+    textPainter.paint(canvas, const Offset(4, 0));
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ChartPainter oldDelegate) {
+    return oldDelegate.points != points;
+  }
 }

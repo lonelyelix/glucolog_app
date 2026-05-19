@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
 import 'app_shell.dart';
+import 'quick_help_faq_screen.dart';
+import 'emergency_support_screen.dart';
 
 class CustomerSupportScreen extends StatelessWidget {
   const CustomerSupportScreen({super.key});
@@ -33,6 +35,7 @@ class CustomerSupportScreen extends StatelessWidget {
                   ),
                 ),
               ),
+
               const SizedBox(height: 18),
 
               _SupportCard(
@@ -60,33 +63,51 @@ class CustomerSupportScreen extends StatelessWidget {
 
               const SizedBox(height: 18),
 
-              _SupportCard(
-                bgColor: const Color(0xFFE8B1A4),
-                iconBg: const Color(0xFFEF6D3A),
-                icon: Icons.priority_high,
-                title: 'Emergency support',
-                subtitle:
-                    'Call emergency services for urgent medical help',
-                footer: const Text(
-                  'Available 24/7',
-                  style: TextStyle(
-                    color: Color(0xFFF06F2E),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EmergencySupportScreen(),
+                    ),
+                  );
+                },
+                child: _SupportCard(
+                  bgColor: const Color(0xFFE8B1A4),
+                  iconBg: const Color(0xFFEF6D3A),
+                  icon: Icons.priority_high,
+                  title: 'Emergency support',
+                  subtitle: 'Call emergency services for urgent medical help',
+                  footer: const Text(
+                    'Available 24/7',
+                    style: TextStyle(
+                      color: Color(0xFFF06F2E),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 18),
 
-              _SupportCard(
-                bgColor: const Color(0xFFF4F4F7),
-                iconBg: const Color(0xFF2F6F24),
-                icon: Icons.question_mark,
-                title: 'Quick help & FAQs',
-                subtitle:
-                    'Find answers to common questions instantly',
-                footer: const SizedBox.shrink(),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const QuickHelpFaqScreen(),
+                    ),
+                  );
+                },
+                child: _SupportCard(
+                  bgColor: const Color(0xFFF4F4F7),
+                  iconBg: const Color(0xFF2F6F24),
+                  icon: Icons.question_mark,
+                  title: 'Quick help & FAQs',
+                  subtitle: 'Find answers to common questions instantly',
+                  footer: const SizedBox.shrink(),
+                ),
               ),
 
               const SizedBox(height: 120),
@@ -137,6 +158,7 @@ class CustomerSupportScreen extends StatelessWidget {
                   ),
                 ),
               ),
+
               const SizedBox(height: 8),
             ],
           ),
@@ -188,17 +210,12 @@ class _SupportCard extends StatelessWidget {
               width: 42,
               height: 42,
               margin: const EdgeInsets.only(top: 10),
-              decoration: BoxDecoration(
-                color: iconBg,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 24,
-              ),
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
+
             const SizedBox(width: 16),
+
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -213,7 +230,9 @@ class _SupportCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
+
                     const SizedBox(height: 4),
+
                     Text(
                       subtitle,
                       style: const TextStyle(
@@ -223,7 +242,9 @@ class _SupportCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+
                     const SizedBox(height: 14),
+
                     footer,
                   ],
                 ),
@@ -249,10 +270,7 @@ class _StatusDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: const Color(0xFF6C7896),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF6C7896), width: 1),
       ),
     );
   }
